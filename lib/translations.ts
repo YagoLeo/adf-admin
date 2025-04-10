@@ -57,6 +57,8 @@ export type TranslationKey =
   | "errorDeletingItems"
   | "loadingData"
   | "refreshData"
+  | "error"
+  | "success"
 
 export const translations: Record<string, Record<TranslationKey, string>> = {
   zh: {
@@ -118,6 +120,8 @@ export const translations: Record<string, Record<TranslationKey, string>> = {
     errorDeletingItems: "删除记录时出错",
     loadingData: "加载数据中...",
     refreshData: "刷新数据",
+    error: "错误",
+    success: "成功",
   },
   en: {
     logisticsLedgerTitle: "Aodefa Logistics International Freight Ledger",
@@ -178,6 +182,8 @@ export const translations: Record<string, Record<TranslationKey, string>> = {
     errorDeletingItems: "Error deleting items",
     loadingData: "Loading data...",
     refreshData: "Refresh Data",
+    error: "Error",
+    success: "Success",
   },
 }
 
