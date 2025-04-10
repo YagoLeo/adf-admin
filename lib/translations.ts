@@ -59,6 +59,17 @@ export type TranslationKey =
   | "refreshData"
   | "error"
   | "success"
+  | "batchEdit"
+  | "batchDelete"
+  | "batchGenerate"
+  | "batchItemsAdded"
+  | "batchItemsUpdated"
+  | "batchItemsDeleted"
+  | "batchItemsSelected"
+  | "batchItemsDeselected"
+  | "prefix"
+  | "startNumber"
+  | "count"
 
 export const translations: Record<string, Record<TranslationKey, string>> = {
   zh: {
@@ -122,6 +133,17 @@ export const translations: Record<string, Record<TranslationKey, string>> = {
     refreshData: "刷新数据",
     error: "错误",
     success: "成功",
+
+    batchDelete: "批量删除",
+    batchGenerate: "批量生成运单号",
+    batchItemsAdded: "批量添加",
+    batchItemsUpdated: "批量更新",
+    batchItemsDeleted: "批量删除",
+    batchItemsSelected: "批量选择",
+    batchItemsDeselected: "批量取消选择",
+    prefix: "订单号前缀",
+    startNumber: "起始编号",
+    count: "生成数量",
   },
   en: {
     logisticsLedgerTitle: "Aodefa Logistics International Freight Ledger",

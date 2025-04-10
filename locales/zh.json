@@ -1,0 +1,13 @@
+{
+  "batchEdit": "批量编辑",
+  "batchGenerate": "批量生成",
+  "prefix": "前缀",
+  "startNumber": "起始编号",
+  "count": "数量",
+  "generate": "生成",
+  "generating": "生成中",
+  "itemsAdded": "订单已添加",
+  "itemsUpdated": "订单已更新",
+  "errorGeneratingItems": "生成订单时出错",
+  "actions": "操作"
+}

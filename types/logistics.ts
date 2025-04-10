@@ -29,5 +29,11 @@ export interface LogisticsItem {
   merchantARNABN: string
   purchaserABN: string
   containerNumber: string
+  status: 'pending' | 'in_transit' | 'delivered' | 'cancelled'
+  currentLocation: string
+  trackingNumber: string
+  estimatedDeliveryDate: string
+  actualDeliveryDate: string
+  notes: string
 }
 

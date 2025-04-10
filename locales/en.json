@@ -1,0 +1,13 @@
+{
+  "batchEdit": "Batch Edit",
+  "batchGenerate": "Batch Generate",
+  "prefix": "Prefix",
+  "startNumber": "Start Number",
+  "count": "Count",
+  "generate": "Generate",
+  "generating": "Generating",
+  "itemsAdded": "Items Added",
+  "itemsUpdated": "Items Updated",
+  "errorGeneratingItems": "Error Generating Items",
+  "actions": "Actions"
+}
