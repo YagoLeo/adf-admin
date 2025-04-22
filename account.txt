@@ -2,3 +2,46 @@
 admin001 密码 000000
 后台经销商（只读）
 admin002 密码 111111
+
+
+create table public.logistics_items (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  house_bill_number text null,
+  house_bill_reference text null,
+  shipper_name text null,
+  shipper_address1 text null,
+  shipper_address2 text null,
+  shipper_city text null,
+  shipper_state text null,
+  shipper_country_code text null,
+  shipper_postcode text null,
+  consignee_name text null,
+  consignee_address1 text null,
+  consignee_address2 text null,
+  consignee_city text null,
+  consignee_postcode text null,
+  consignee_state text null,
+  consignee_country_code text null,
+  consignee_phone text null,
+  delivery_instructions text null,
+  goods_description text null,
+  weight_in_kg numeric null,
+  pieces integer null,
+  pack_type text null,
+  goods_value numeric null,
+  currency text null,
+  cbm numeric null,
+  sac_yn text null,
+  merchant_arn_abn text null,
+  purchaser_abn text null,
+  container_number text null,
+  created_at timestamp with time zone not null default timezone ('utc'::text, now()),
+  updated_at timestamp with time zone not null default timezone ('utc'::text, now()),
+  constraint logistics_items_pkey primary key (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_logistics_items_house_bill_number on public.logistics_items using btree (house_bill_number) TABLESPACE pg_default;
+
+create index IF not exists idx_logistics_items_consignee_name on public.logistics_items using btree (consignee_name) TABLESPACE pg_default;
+
+create index IF not exists idx_logistics_items_container_number on public.logistics_items using btree (container_number) TABLESPACE pg_default;

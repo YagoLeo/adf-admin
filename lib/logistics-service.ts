@@ -340,4 +340,22 @@ export function prepareItemForDatabase(item: Partial<LogisticsItem>): Omit<Logis
     actualDeliveryDate: item.actualDeliveryDate || '',
     notes: item.notes || ''
   }
+}
+
+// 批量更新物流状态
+export async function updateLogisticsStatusByPrefix(prefix: string, status: string): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .update({ status })
+      .ilike('house_bill_number', `${prefix}%`)
+      .select()
+
+    if (error) throw error
+
+    return data?.length || 0
+  } catch (error) {
+    console.error('Error updating logistics status by prefix:', error)
+    throw error
+  }
 } 

@@ -16,13 +16,21 @@ import {
   Upload,
   RefreshCw,
   Plus,
+  Search,
 } from 'lucide-react';
-import { getAllLogisticsItems } from '@/lib/logistics-service';
+import { getAllLogisticsItems, updateLogisticsStatusByPrefix } from '@/lib/logistics-service';
 import { AddLogisticsItemDialog } from '@/components/add-logistics-item-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useRouter } from 'next/navigation';
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { supabase } from '@/lib/supabase'
 
 export function LogisticsLedger() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [logisticsData, setLogisticsData] = useState<LogisticsItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<LogisticsItem[]>([]);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -31,6 +39,12 @@ export function LogisticsLedger() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [prefix, setPrefix] = useState('');
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState('pending');
+  const [updateError, setUpdateError] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [affectedCount, setAffectedCount] = useState(0);
 
   useEffect(() => {
     const role = localStorage.getItem('userRole');
@@ -88,10 +102,47 @@ export function LogisticsLedger() {
 
   const isAdmin = userRole === 'admin';
 
+  const handleUpdateStatus = async () => {
+    if (!prefix) {
+      setUpdateError('请输入物流单号前缀');
+      return;
+    }
+
+    setIsUpdating(true);
+    setUpdateError('');
+
+    try {
+      // 更新状态
+      const count = await updateLogisticsStatusByPrefix(prefix, newStatus);
+      
+      if (count === 0) {
+        setUpdateError(`没有找到匹配前缀 "${prefix}" 的物流单`);
+        setIsUpdating(false);
+        return;
+      }
+
+      // 刷新数据
+      setRefreshTrigger((prev) => prev + 1);
+      setIsUpdateDialogOpen(false);
+      setPrefix('');
+    } catch (error) {
+      console.error('Error updating logistics status:', error);
+      setUpdateError('更新物流状态失败，请稍后再试');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{t('logisticsLedgerTitle')}</h1>
+        <div>
+          <h1 className="text-2xl font-bold">{t('logisticsLedgerTitle')}</h1>
+          <div className="text-sm text-muted-foreground mt-1">
+            当前登录: {userRole === 'admin' ? 'admin001' : localStorage.getItem('dealerUsername') || '经销商'} 
+            ({userRole === 'admin' ? '管理员' : '经销商'})
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <Button
@@ -105,11 +156,23 @@ export function LogisticsLedger() {
             />
             {t('refreshData')}
           </Button>
+          {isAdmin && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/dealer-accounts')}
+              >
+                经销商账号管理
+              </Button>
+            </>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               localStorage.removeItem('userRole')
+              localStorage.removeItem('dealerUsername')
               window.location.href = '/login'
             }}
           >
@@ -139,10 +202,68 @@ export function LogisticsLedger() {
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                   {isAdmin && (
-                    <Button onClick={() => setIsAddDialogOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t('addNew')}
-                    </Button>
+                    <>
+                      <Button onClick={() => setIsAddDialogOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        {t('addNew')}
+                      </Button>
+                      <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">
+                            批量更新状态
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>批量更新物流状态</DialogTitle>
+                            <DialogDescription>
+                              输入物流单号前缀，将更新所有匹配的物流单状态
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="prefix">物流单号前缀</Label>
+                              <Input
+                                id="prefix"
+                                placeholder="例如: ABC123"
+                                value={prefix}
+                                onChange={(e) => setPrefix(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="status">新状态</Label>
+                              <Select value={newStatus} onValueChange={setNewStatus}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="选择状态" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">待处理</SelectItem>
+                                  <SelectItem value="in_transit">运输中</SelectItem>
+                                  <SelectItem value="delivered">已送达</SelectItem>
+                                  <SelectItem value="cancelled">已取消</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {updateError && (
+                              <div className="text-red-500 text-sm">{updateError}</div>
+                            )}
+                            {affectedCount > 0 && (
+                              <div className="text-green-500 text-sm">
+                                将更新 {affectedCount} 条物流单的状态
+                              </div>
+                            )}
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
+                              取消
+                            </Button>
+                            <Button onClick={handleUpdateStatus} disabled={isUpdating}>
+                              {isUpdating ? '更新中...' : '更新'}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
                   <Button
                     variant="outline"

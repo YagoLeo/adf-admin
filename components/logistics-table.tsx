@@ -86,7 +86,8 @@ export function LogisticsTable({
       (item) =>
         item.houseBillNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.consigneeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.containerNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        item.containerNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.status && item.status.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   };
 
@@ -162,6 +163,38 @@ export function LogisticsTable({
   };
 
   const filteredData = filterData(data);
+
+  // 获取状态标签样式
+  const getStatusBadgeClass = (status: string | undefined) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'in_transit':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'delivered':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  // 获取状态显示文本
+  const getStatusText = (status: string | undefined) => {
+    switch (status) {
+      case 'pending':
+        return '待处理';
+      case 'in_transit':
+        return '运输中';
+      case 'delivered':
+        return '已送达';
+      case 'cancelled':
+        return '已取消';
+      default:
+        return '未知';
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -250,47 +283,64 @@ export function LogisticsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">
+                <TableHead className="w-12">
                   <Checkbox
                     checked={selectAll}
                     onCheckedChange={handleSelectAll}
-                    aria-label={t('selectAll')}
+                    aria-label="Select all"
                   />
                 </TableHead>
                 <TableHead>{t('houseBillNumber')}</TableHead>
                 <TableHead>{t('consigneeName')}</TableHead>
                 <TableHead>{t('containerNumber')}</TableHead>
-                <TableHead>{t('status')}</TableHead>
-                {isAdmin && <TableHead className="w-[100px]">{t('actions')}</TableHead>}
+                <TableHead>状态</TableHead>
+                {isAdmin && <TableHead className="w-24">{t('actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIds.has(item.id)}
-                      onCheckedChange={() => handleSelectItem(item.id)}
-                      aria-label={t('selectItem')}
-                    />
+              {filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={isAdmin ? 6 : 5}
+                    className="h-24 text-center"
+                  >
+                    {t('noRecordsFound')}
                   </TableCell>
-                  <TableCell>{item.houseBillNumber}</TableCell>
-                  <TableCell>{item.consigneeName}</TableCell>
-                  <TableCell>{item.containerNumber}</TableCell>
-                  <TableCell>{item.status}</TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  )}
                 </TableRow>
-              ))}
+              ) : (
+                filteredData.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(item.id)}
+                        onCheckedChange={() => handleSelectItem(item.id)}
+                        aria-label={`Select ${item.houseBillNumber}`}
+                      />
+                    </TableCell>
+                    <TableCell>{item.houseBillNumber}</TableCell>
+                    <TableCell>{item.consigneeName}</TableCell>
+                    <TableCell>{item.containerNumber}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs border ${getStatusBadgeClass(item.status)}`}>
+                        {getStatusText(item.status)}
+                      </span>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditItem(item)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
