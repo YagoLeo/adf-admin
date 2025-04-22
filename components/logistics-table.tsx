@@ -19,6 +19,7 @@ interface LogisticsTableProps {
   onSelectionChange: (selectedItems: LogisticsItem[]) => void;
   onAddClick: () => void;
   onDataChange: () => void;
+  isAdmin: boolean;
 }
 
 export function LogisticsTable({
@@ -26,6 +27,7 @@ export function LogisticsTable({
   onSelectionChange,
   onAddClick,
   onDataChange,
+  isAdmin,
 }: LogisticsTableProps) {
   const { t } = useLanguage();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -194,25 +196,29 @@ export function LogisticsTable({
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBatchEdit}
-                className="flex items-center gap-1"
-              >
-                <Edit className="h-4 w-4" />
-                {t('batchEdit')}
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteSelected}
-                disabled={isDeleting}
-                className="flex items-center gap-1"
-              >
-                <Trash2 className="h-4 w-4" />
-                {isDeleting ? t('deleting') : t('deleteSelected')}
-              </Button>
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBatchEdit}
+                  className="flex items-center gap-1"
+                >
+                  <Edit className="h-4 w-4" />
+                  {t('batchEdit')}
+                </Button>
+              )}
+              {isAdmin && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  className="flex items-center gap-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? t('deleting') : t('deleteSelected')}
+                </Button>
+              )}
             </>
           )}
 
@@ -226,14 +232,16 @@ export function LogisticsTable({
             {t('batchGenerate')}
           </Button>
 
-          <Button
-            size="sm"
-            onClick={onAddClick}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            {t('addNew')}
-          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={onAddClick}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              {t('addNew')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -250,15 +258,10 @@ export function LogisticsTable({
                   />
                 </TableHead>
                 <TableHead>{t('houseBillNumber')}</TableHead>
-                <TableHead>{t('houseBillReference')}</TableHead>
                 <TableHead>{t('consigneeName')}</TableHead>
-                <TableHead>{t('consigneeCity')}</TableHead>
-                <TableHead>{t('consigneeCountryCode')}</TableHead>
-                <TableHead>{t('goodsDescription')}</TableHead>
-                <TableHead>{t('weightInKG')}</TableHead>
-                <TableHead>{t('pieces')}</TableHead>
                 <TableHead>{t('containerNumber')}</TableHead>
-                <TableHead className="w-[50px]">{t('actions')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                {isAdmin && <TableHead className="w-[100px]">{t('actions')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -268,63 +271,56 @@ export function LogisticsTable({
                     <Checkbox
                       checked={selectedIds.has(item.id)}
                       onCheckedChange={() => handleSelectItem(item.id)}
-                      aria-label={`${t('select')} ${item.houseBillNumber}`}
+                      aria-label={t('selectItem')}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {item.houseBillNumber}
-                  </TableCell>
-                  <TableCell>{item.houseBillReference}</TableCell>
+                  <TableCell>{item.houseBillNumber}</TableCell>
                   <TableCell>{item.consigneeName}</TableCell>
-                  <TableCell>{item.consigneeCity}</TableCell>
-                  <TableCell>{item.consigneeCountryCode}</TableCell>
-                  <TableCell>{item.goodsDescription}</TableCell>
-                  <TableCell>{item.weightInKG}</TableCell>
-                  <TableCell>{item.pieces}</TableCell>
                   <TableCell>{item.containerNumber}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditItem(item)}
-                      className="h-8 w-8"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+                  <TableCell>{item.status}</TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditItem(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
-              {filteredData.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={11} className="h-24 text-center">
-                    {data.length === 0 ? t('noData') : t('noMatchingRecords')}
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </div>
       </div>
 
-      <EditLogisticsItemDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        item={editingItem}
-        onItemUpdated={handleItemUpdated}
-      />
+      {isAdmin && editingItem && (
+        <EditLogisticsItemDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          item={editingItem}
+          onItemUpdated={handleItemUpdated}
+        />
+      )}
 
-      <BatchEditDialog
-        open={isBatchEditDialogOpen}
-        onOpenChange={setIsBatchEditDialogOpen}
-        selectedItems={data.filter((item) => selectedIds.has(item.id))}
-        onItemsUpdated={handleBatchItemsUpdated}
-      />
+      {isAdmin && (
+        <BatchEditDialog
+          open={isBatchEditDialogOpen}
+          onOpenChange={setIsBatchEditDialogOpen}
+          selectedIds={Array.from(selectedIds)}
+          onItemsUpdated={handleBatchItemsUpdated}
+        />
+      )}
 
-      <BatchGenerateDialog
-        open={isBatchGenerateDialogOpen}
-        onOpenChange={setIsBatchGenerateDialogOpen}
-        onItemsAdded={handleBatchItemsAdded}
-      />
+      {isAdmin && (
+        <BatchGenerateDialog
+          open={isBatchGenerateDialogOpen}
+          onOpenChange={setIsBatchGenerateDialogOpen}
+          onItemsAdded={handleBatchItemsAdded}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { supabase } from './supabase-client'
 import type { LogisticsItem } from '@/types/logistics'
-123
+
 // 表名
 const TABLE_NAME = 'logistics_items'
 
@@ -44,11 +44,74 @@ export async function getAllLogisticsItems(): Promise<LogisticsItem[]> {
       sacYN: item.sac_yn,
       merchantARNABN: item.merchant_arn_abn,
       purchaserABN: item.purchaser_abn,
-      containerNumber: item.container_number
+      containerNumber: item.container_number,
+      status: item.status,
+      currentLocation: item.current_location,
+      trackingNumber: item.tracking_number,
+      estimatedDeliveryDate: item.estimated_delivery_date,
+      actualDeliveryDate: item.actual_delivery_date,
+      notes: item.notes
     }))
   } catch (error) {
     console.error('Error getting logistics items:', error)
     return []
+  }
+}
+
+// 获取单个物流数据
+export async function getLogisticsItem(id: string): Promise<LogisticsItem | null> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+
+    if (!data) return null
+
+    return {
+      id: data.id,
+      houseBillNumber: data.house_bill_number,
+      houseBillReference: data.house_bill_reference,
+      shipperName: data.shipper_name,
+      shipperAddress1: data.shipper_address1,
+      shipperAddress2: data.shipper_address2,
+      shipperCity: data.shipper_city,
+      shipperState: data.shipper_state,
+      shipperCountryCode: data.shipper_country_code,
+      shipperPostcode: data.shipper_postcode,
+      consigneeName: data.consignee_name,
+      consigneeAddress1: data.consignee_address1,
+      consigneeAddress2: data.consignee_address2,
+      consigneeCity: data.consignee_city,
+      consigneePostcode: data.consignee_postcode,
+      consigneeState: data.consignee_state,
+      consigneeCountryCode: data.consignee_country_code,
+      consigneePhone: data.consignee_phone,
+      deliveryInstructions: data.delivery_instructions,
+      goodsDescription: data.goods_description,
+      weightInKG: data.weight_in_kg,
+      pieces: data.pieces,
+      packType: data.pack_type,
+      goodsValue: data.goods_value,
+      currency: data.currency,
+      cbm: data.cbm,
+      sacYN: data.sac_yn,
+      merchantARNABN: data.merchant_arn_abn,
+      purchaserABN: data.purchaser_abn,
+      containerNumber: data.container_number,
+      status: data.status,
+      currentLocation: data.current_location,
+      trackingNumber: data.tracking_number,
+      estimatedDeliveryDate: data.estimated_delivery_date,
+      actualDeliveryDate: data.actual_delivery_date,
+      notes: data.notes
+    }
+  } catch (error) {
+    console.error('Error getting logistics item:', error)
+    return null
   }
 }
 
@@ -86,7 +149,13 @@ export async function addLogisticsItem(item: Omit<LogisticsItem, 'id'>): Promise
         sac_yn: item.sacYN,
         merchant_arn_abn: item.merchantARNABN,
         purchaser_abn: item.purchaserABN,
-        container_number: item.containerNumber
+        container_number: item.containerNumber,
+        status: item.status,
+        current_location: item.currentLocation,
+        tracking_number: item.trackingNumber,
+        estimated_delivery_date: item.estimatedDeliveryDate,
+        actual_delivery_date: item.actualDeliveryDate,
+        notes: item.notes
       })
       .select()
       .single()
@@ -133,7 +202,13 @@ export async function addLogisticsItems(items: Omit<LogisticsItem, 'id'>[]): Pro
           sacYN: item.sacYN,
           merchantARNABN: item.merchantARNABN,
           purchaserABN: item.purchaserABN,
-          containerNumber: item.containerNumber
+          containerNumber: item.containerNumber,
+          status: item.status,
+          currentLocation: item.currentLocation,
+          trackingNumber: item.trackingNumber,
+          estimatedDeliveryDate: item.estimatedDeliveryDate,
+          actualDeliveryDate: item.actualDeliveryDate,
+          notes: item.notes
         }))
       })
 
@@ -209,7 +284,13 @@ export async function updateLogisticsItem(id: string, data: Partial<LogisticsIte
         sac_yn: data.sacYN,
         merchant_arn_abn: data.merchantARNABN,
         purchaser_abn: data.purchaserABN,
-        container_number: data.containerNumber
+        container_number: data.containerNumber,
+        status: data.status,
+        current_location: data.currentLocation,
+        tracking_number: data.trackingNumber,
+        estimated_delivery_date: data.estimatedDeliveryDate,
+        actual_delivery_date: data.actualDeliveryDate,
+        notes: data.notes
       })
       .eq('id', id)
 
@@ -251,6 +332,12 @@ export function prepareItemForDatabase(item: Partial<LogisticsItem>): Omit<Logis
     sacYN: item.sacYN || '',
     merchantARNABN: item.merchantARNABN || '',
     purchaserABN: item.purchaserABN || '',
-    containerNumber: item.containerNumber || ''
+    containerNumber: item.containerNumber || '',
+    status: item.status || 'pending',
+    currentLocation: item.currentLocation || '',
+    trackingNumber: item.trackingNumber || '',
+    estimatedDeliveryDate: item.estimatedDeliveryDate || '',
+    actualDeliveryDate: item.actualDeliveryDate || '',
+    notes: item.notes || ''
   }
 } 

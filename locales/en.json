@@ -9,5 +9,18 @@
   "itemsAdded": "Items Added",
   "itemsUpdated": "Items Updated",
   "errorGeneratingItems": "Error Generating Items",
-  "actions": "Actions"
+  "actions": "Actions",
+  "itemUpdated": "Item Updated",
+  "selectItem": "Select Item",
+  "houseBillNumber": "House Bill Number",
+  "consigneeName": "Consignee Name",
+  "containerNumber": "Container Number",
+  "status": "Status",
+  "searchByBillNumberOrConsignee": "Search by bill number or consignee",
+  "selectAll": "Select All",
+  "deleting": "Deleting",
+  "deleteSelected": "Delete Selected",
+  "addNew": "Add New",
+  "selectedItemsDeleted": "Selected items deleted",
+  "errorDeletingItems": "Error deleting items"
 }

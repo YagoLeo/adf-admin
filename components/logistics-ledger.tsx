@@ -30,6 +30,12 @@ export function LogisticsLedger() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const role = localStorage.getItem('userRole');
+    setUserRole(role);
+  }, []);
 
   // 从数据库加载数据
   useEffect(() => {
@@ -80,11 +86,13 @@ export function LogisticsLedger() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const isAdmin = userRole === 'admin';
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('logisticsLedgerTitle')}</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <Button
             variant="outline"
@@ -96,6 +104,16 @@ export function LogisticsLedger() {
               className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
             />
             {t('refreshData')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              localStorage.removeItem('userRole')
+              window.location.href = '/login'
+            }}
+          >
+            退出登录
           </Button>
         </div>
       </div>
@@ -110,7 +128,9 @@ export function LogisticsLedger() {
       <Tabs defaultValue="ledger" className="space-y-4">
         <TabsList>
           <TabsTrigger value="ledger">{t('ledger')}</TabsTrigger>
-          <TabsTrigger value="import">{t('importData')}</TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="import">{t('importData')}</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="ledger">
@@ -118,10 +138,12 @@ export function LogisticsLedger() {
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
-                  <Button onClick={() => setIsAddDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t('addNew')}
-                  </Button>
+                  {isAdmin && (
+                    <Button onClick={() => setIsAddDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t('addNew')}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={handleGeneratePDF}
@@ -144,30 +166,35 @@ export function LogisticsLedger() {
                 onSelectionChange={handleSelectionChange}
                 onAddClick={() => setIsAddDialogOpen(true)}
                 onDataChange={() => setRefreshTrigger((prev) => prev + 1)}
+                isAdmin={isAdmin}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="import">
-          <Card className="border-none shadow-lg">
-            <CardContent className="p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">
-                  {t('importLogisticsData')}
-                </h2>
-                <ExcelImporter onDataImported={handleDataImport} />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="import">
+            <Card className="border-none shadow-lg">
+              <CardContent className="p-6">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    {t('importLogisticsData')}
+                  </h2>
+                  <ExcelImporter onDataImported={handleDataImport} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
-      <AddLogisticsItemDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onItemAdded={handleItemAdded}
-      />
+      {isAdmin && (
+        <AddLogisticsItemDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onItemAdded={handleItemAdded}
+        />
+      )}
     </div>
   );
 }

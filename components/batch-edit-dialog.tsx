@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,25 +13,40 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/language-provider';
-import { updateLogisticsItem } from '@/lib/logistics-service';
+import { updateLogisticsItem, getLogisticsItem } from '@/lib/logistics-service';
 import type { LogisticsItem } from '@/types/logistics';
 
 interface BatchEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedItems: LogisticsItem[];
+  selectedIds: string[];
   onItemsUpdated: () => void;
 }
 
 export function BatchEditDialog({
   open,
   onOpenChange,
-  selectedItems,
+  selectedIds,
   onItemsUpdated,
 }: BatchEditDialogProps) {
   const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Partial<LogisticsItem>>({});
+  const [selectedItems, setSelectedItems] = useState<LogisticsItem[]>([]);
+
+  // 加载选中的项目
+  useEffect(() => {
+    const loadSelectedItems = async () => {
+      const items = await Promise.all(
+        selectedIds.map((id) => getLogisticsItem(id))
+      );
+      setSelectedItems(items.filter((item): item is LogisticsItem => item !== null));
+    };
+
+    if (open) {
+      loadSelectedItems();
+    }
+  }, [open, selectedIds]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
